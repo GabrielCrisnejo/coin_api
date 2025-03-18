@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:17.4
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: crypto_db
+      POSTGRES_USER: gcrisnejo
+      POSTGRES_PASSWORD: gcrisnejo
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data:
