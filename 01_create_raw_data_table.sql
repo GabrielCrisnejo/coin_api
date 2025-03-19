@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS raw_crypto_data (
     coin_id TEXT NOT NULL,
     date DATE NOT NULL,
     price_usd NUMERIC NOT NULL,
+    volume_usd NUMERIC NOT NULL,
     raw_json JSONB NOT NULL,
     UNIQUE (coin_id, date)
 );

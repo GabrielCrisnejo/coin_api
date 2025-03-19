@@ -26,8 +26,9 @@ os.makedirs(DATA_DIR, exist_ok=True)
 COINS = ["bitcoin", "ethereum", "cardano"]
 
 # Limite de concurrencia
-CONCURRENT_REQUESTS = 10  # Limite de peticiones simultáneas
+CONCURRENT_REQUESTS = 20  # Limite de peticiones simultáneas
 REQUESTS_PER_MINUTE = 30  # Límite de solicitudes por minuto de la API
+SLEEP = 10
 
 def fetch_crypto_data(coin_id, date):
     """ Descarga datos históricos de criptomonedas para una fecha específica. """
@@ -47,8 +48,8 @@ def fetch_crypto_data(coin_id, date):
             logging.info(f"✅ Datos guardados en {filename}")
         elif response.status_code == 429:  # Error 429 - Rate Limit Exceeded
             logging.error(f"❌ Error 429 para {coin_id} en {formatted_date}: {response.json()}")
-            logging.info("Esperando 10 segundos antes de reintentar...")
-            time.sleep(10)  # Espera 10 segundos antes de intentar nuevamente
+            logging.info(f"Esperando {SLEEP} segundos antes de reintentar...")
+            time.sleep(SLEEP)  # Espera 10 segundos antes de intentar nuevamente
             fetch_crypto_data(coin_id, date)  # Vuelve a intentar la solicitud
         else:
             logging.error(f"❌ Error {response.status_code} para {coin_id} en {formatted_date}: {response.json()}")

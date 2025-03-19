@@ -26,13 +26,14 @@ def insert_raw_data(cursor, data, coin_id, date):
     """ Inserta los datos crudos en la tabla raw_crypto_data, ignorando duplicados """
     try:
         cursor.execute("""
-            INSERT INTO raw_crypto_data (coin_id, date, price_usd, raw_json)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO raw_crypto_data (coin_id, date, price_usd, volume_usd, raw_json)
+            VALUES (%s, %s, %s, %s, %s)
             ON CONFLICT (coin_id, date) DO NOTHING
         """, (
             coin_id,
             date,
             data['market_data']['current_price']['usd'],  # Precio en USD
+            data['market_data']['total_volume']['usd'],  # Volumen en USD
             json.dumps(data)  # Guardamos el JSON completo
         ))
         print(f"✅ Datos de {coin_id} para {date} insertados en raw_crypto_data.")
