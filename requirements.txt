@@ -1,3 +1,4 @@
 psycopg2-binary==2.9.10
 holidays==0.69
 xgboost==3.0.0
+tqdm==4.66.5
