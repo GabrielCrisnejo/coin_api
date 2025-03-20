@@ -180,4 +180,13 @@ Note 5: No previous records are lost, only updated if needed. This means that if
 
 # Task 3: Analysing coin data with SQL
 
+Run the following command:
+```
+$ python src/analyzer.py
+```
+
 # Task 4: Finance meets Data Science
+Run the following command:
+```
+$ python src/builder.py
+```

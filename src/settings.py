@@ -32,3 +32,6 @@ SQL_FILES = [
 
 # Directory where JSON files are stored
 JSON_FILES_PATH = os.getenv("JSON_FILES_PATH", os.path.join(base_dir, "data", "testing"))
+
+# SQL analysis
+SQL_ANALYSIS_FILE = os.getenv("SQL_ANALYSIS_FILE", os.path.join(base_dir, "sql", "analysis_queries.sql"))
