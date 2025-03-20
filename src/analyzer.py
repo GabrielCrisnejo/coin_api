@@ -1,8 +1,8 @@
 import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from settings import *
-from logger import *
+from settings import * # Asegúrate de tener tu archivo settings.py configurado
+from logger import * # Asegúrate de tener tu archivo logger.py configurado
 
 # Configuración del logger
 logger = setup_logger("query_executor")
@@ -30,7 +30,6 @@ class DatabaseManager:
             logger.error(f"Error executing query: {e}")
             return None
 
-
 def load_queries_from_file(file_path):
     """Carga las consultas SQL desde un archivo."""
     if not os.path.exists(file_path):
@@ -41,9 +40,8 @@ def load_queries_from_file(file_path):
         queries = [query.strip() for query in file.read().split(";") if query.strip()]
     return queries
 
-
 def run_sql_queries():
-    """Executes the analysis queries stored in an SQL file."""
+    """Ejecuta las consultas SQL de análisis, permitiendo parámetros dinámicos."""
     queries = load_queries_from_file(SQL_ANALYSIS_FILE)
 
     if not queries:
@@ -52,8 +50,11 @@ def run_sql_queries():
 
     with DatabaseManager() as db_manager:
         for idx, query in enumerate(queries, start=1):
-            logger.info(f"Executing query {idx}: {query[:50]}...")
-            results = db_manager.execute_query(query)
+            # Reemplazar el marcador con el valor real desde settings.py
+            formatted_query = query.format(DAYS_AFTER_DROP=DAYS_AFTER_DROP)
+
+            logger.info(f"Executing query {idx}: {formatted_query[:50]}...")
+            results = db_manager.execute_query(formatted_query)
 
             if not results:
                 logger.warning(f"No results for query {idx}.")
@@ -66,9 +67,11 @@ def run_sql_queries():
                     logger.info(f"  - coin: {coin} | year: {int(year)} | month: {int(month)} | average: ${float(avg_price):.2f} USD")
 
             elif idx == 2:
-                logger.info("Price increase after consecutive drops (in USD):")
-                for coin, price_change, market_cap in results:
-                    logger.info(f"  - coin: {coin} | price_change: ${float(price_change):.2f} USD | market_cap: ${float(market_cap):.2f} USD")
+                logger.info(f"Average Price recovery after consecutive drops of {DAYS_AFTER_DROP} days (in USD):")
+                for coin, avg_price_increase, market_cap_usd in results:
+                    logger.info(
+                        f"Coin: {coin} | Avg Price Increase: ${avg_price_increase:.2f} | Market Cap: ${market_cap_usd:.2f}"
+                    )
 
 if __name__ == "__main__":
     run_sql_queries()

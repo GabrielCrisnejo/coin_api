@@ -10,48 +10,120 @@ ORDER BY coin_id, year, month;
 
 -- 2. Calcular el aumento promedio de precio después de caídas consecutivas de más de 3 días
 WITH price_changes AS (
-    SELECT 
-        coin_id,
-        date,
-        price_usd,
-        LAG(price_usd, 1) OVER (PARTITION BY coin_id ORDER BY date) AS prev_price,
-        CASE 
-            WHEN price_usd < LAG(price_usd, 1) OVER (PARTITION BY coin_id ORDER BY date) THEN 1
-            ELSE 0
-        END AS is_drop
-    FROM raw_crypto_data
-),
-drop_streaks AS (
-    SELECT 
-        coin_id,
-        date,
-        price_usd,
-        SUM(is_drop) OVER (PARTITION BY coin_id ORDER BY date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) AS drop_streak
-    FROM price_changes
-),
-price_recovery AS (
-    SELECT 
+    SELECT
         coin_id,
         date,
         price_usd,
         LAG(price_usd) OVER (PARTITION BY coin_id ORDER BY date) AS prev_price,
-        (price_usd - LAG(price_usd) OVER (PARTITION BY coin_id ORDER BY date)) AS price_increase
+        CASE 
+            WHEN price_usd < LAG(price_usd) OVER (PARTITION BY coin_id ORDER BY date) THEN 1
+            ELSE 0
+        END AS is_drop
     FROM raw_crypto_data
-    WHERE coin_id IN (SELECT DISTINCT coin_id FROM drop_streaks WHERE drop_streak >= 3)
 ),
+
+streak_groups AS (
+    SELECT
+        coin_id,
+        date,
+        price_usd,
+        is_drop,
+        SUM(CASE WHEN is_drop = 0 THEN 1 ELSE 0 END) OVER (
+            PARTITION BY coin_id 
+            ORDER BY date 
+            ROWS UNBOUNDED PRECEDING
+        ) AS group_id
+    FROM price_changes
+),
+
+streaks_summary AS (
+    SELECT
+        coin_id,
+        group_id,
+        COUNT(*) FILTER (WHERE is_drop = 1) AS drop_days,
+        MIN(date) FILTER (WHERE is_drop = 1) AS drop_start_date,
+        MAX(date) FILTER (WHERE is_drop = 1) AS drop_end_date
+    FROM streak_groups
+    GROUP BY coin_id, group_id
+),
+
+qualified_drops AS (
+    SELECT
+        coin_id,
+        drop_start_date,
+        drop_end_date,
+        drop_days
+    FROM streaks_summary
+    WHERE drop_days >= 3
+),
+
+recovery_prices AS (
+    SELECT
+        q.coin_id,
+        q.drop_end_date,
+        
+        -- Precio al final de la caída (fecha exacta del drop_end_date)
+        ed.price_usd AS end_of_drop_price,
+
+        -- Primer precio de recuperación (primer precio 3 días después de la caída, ajusta el intervalo si quieres)
+        rp.price_usd AS recovery_price
+
+    FROM qualified_drops q
+
+    -- Precio al final de la caída (fecha exacta del drop_end_date)
+    LEFT JOIN LATERAL (
+        SELECT price_usd
+        FROM raw_crypto_data r
+        WHERE r.coin_id = q.coin_id
+          AND r.date = q.drop_end_date
+        ORDER BY r.date ASC
+        LIMIT 1
+    ) ed ON TRUE
+
+    -- Precio de recuperación: primer precio >= drop_end_date + 3 días
+    LEFT JOIN LATERAL (
+        SELECT price_usd
+        FROM raw_crypto_data r
+        WHERE r.coin_id = q.coin_id
+          AND r.date >= q.drop_end_date + INTERVAL '{DAYS_AFTER_DROP} DAY'
+        ORDER BY r.date ASC
+        LIMIT 1
+    ) rp ON TRUE
+),
+
+price_increase_calc AS (
+    SELECT
+        coin_id,
+        recovery_price,
+        end_of_drop_price,
+        (recovery_price - end_of_drop_price) AS price_increase
+    FROM recovery_prices
+    WHERE recovery_price IS NOT NULL
+      AND end_of_drop_price IS NOT NULL
+),
+
+final_recovery AS (
+    SELECT
+        coin_id,
+        AVG(price_increase) AS avg_price_increase
+    FROM price_increase_calc
+    GROUP BY coin_id
+),
+
 market_cap_data AS (
     SELECT
         coin_id,
-        MAX((raw_json->'market_data'->'market_cap'->>'usd')::numeric) AS market_cap_usd -- Usamos MAX para evitar duplicados
+        MAX((raw_json->'market_data'->'market_cap'->>'usd')::numeric) AS market_cap_usd
     FROM raw_crypto_data
-    WHERE raw_json->'market_data'->>'market_cap' IS NOT NULL
-    GROUP BY coin_id -- Agrupamos por coin_id para evitar duplicación
+    WHERE raw_json->'market_data'->'market_cap'->>'usd' IS NOT NULL
+    GROUP BY coin_id
 )
-SELECT 
-    pr.coin_id,
-    AVG(pr.price_increase) AS avg_price_increase,
+
+SELECT
+    fr.coin_id,
+    fr.avg_price_increase,
     mc.market_cap_usd
-FROM price_recovery pr
-JOIN market_cap_data mc ON pr.coin_id = mc.coin_id
-GROUP BY pr.coin_id, mc.market_cap_usd
-ORDER BY pr.coin_id;
+FROM final_recovery fr
+JOIN market_cap_data mc 
+    ON fr.coin_id = mc.coin_id
+ORDER BY fr.coin_id;
