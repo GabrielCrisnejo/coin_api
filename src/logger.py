@@ -1,6 +1,6 @@
 import logging
 import os
-from settings import *
+from src.settings import *
 
 def setup_logger(name):
     # Ensure logs directory exists

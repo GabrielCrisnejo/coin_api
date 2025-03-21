@@ -31,10 +31,15 @@ SQL_FILES = [
 ]
 
 # Directory where JSON files are stored
-JSON_FILES_PATH = os.getenv("JSON_FILES_PATH", os.path.join(base_dir, "data", "testing"))
+JSON_FILES_PATH = os.getenv("JSON_FILES_PATH", os.path.join(base_dir, "data", "downloads", "bulk"))
 
 # SQL analysis
 SQL_ANALYSIS_FILE = os.getenv("SQL_ANALYSIS_FILE", os.path.join(base_dir, "sql", "analysis_queries.sql"))
 
 # DAYS_AFTER_DROP (Task 3, item 2)
 DAYS_AFTER_DROP = int(os.getenv("DAYS_AFTER_DROP", 2))
+
+# Plot store
+
+PLOTS_STORE = os.getenv("PLOTS_STORE", os.path.join(base_dir, "plots"))
+

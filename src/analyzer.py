@@ -1,8 +1,8 @@
 import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from settings import * # Asegúrate de tener tu archivo settings.py configurado
-from logger import * # Asegúrate de tener tu archivo logger.py configurado
+from src.settings import * # Asegúrate de tener tu archivo settings.py configurado
+from src.logger import * # Asegúrate de tener tu archivo logger.py configurado
 
 # Configuración del logger
 logger = setup_logger("query_executor")

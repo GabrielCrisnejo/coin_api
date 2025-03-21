@@ -5,8 +5,8 @@ import requests
 from datetime import datetime, timedelta
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from logger import * 
-from settings import * 
+from src.logger import * 
+from src.settings import * 
 
 # Logger configuration
 logger = setup_logger("fetcher")

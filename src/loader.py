@@ -3,8 +3,8 @@ import json
 import argparse
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from settings import *
-from logger import *
+from src.settings import *
+from src.logger import *
 
 # Logger configuration
 logger = setup_logger("loader")
@@ -53,7 +53,7 @@ class DatabaseManager:
                 "raw_json": json.dumps(data),
             })
             self.session.commit()
-            logger.info(f"Inserted raw data for {coin_id} on {date}.")
+            #logger.info(f"Inserted raw data for {coin_id} on {date}.")
         except Exception as e:
             self.session.rollback()
             logger.error(f"Error inserting raw data: {e}")
@@ -96,7 +96,7 @@ class DatabaseManager:
                     "max_price": new_price,
                     "min_price": new_price
                 })
-                logger.info(f"Inserted aggregated data for {coin_id} on {year}-{month}-{day}.")
+                #logger.info(f"Inserted aggregated data for {coin_id} on {year}-{month}-{day}.")
             
             self.session.commit()
         except Exception as e:
