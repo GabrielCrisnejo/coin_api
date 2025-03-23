@@ -313,6 +313,7 @@ def plot_raw_price_trends(data: List[Tuple[str, str, float, float]]) -> None:
         None
     """
     try:
+        os.makedirs(PLOTS_STORE, exist_ok=True)
         df = pd.DataFrame(data, columns=['coin_id', 'date', 'price_usd', 'volume_usd'])
         df['date'] = pd.to_datetime(df['date'])
 

@@ -11,11 +11,11 @@ load_dotenv(dotenv_path=ENV_PATH)
 
 # Directories
 DATA = os.getenv("DATA", str(BASE_DIR / "data"))
+OUTPUTS = os.getenv("OUTPUTS", str(BASE_DIR / "outputs"))
 PLOTS_STORE = os.getenv("PLOTS_STORE", str(BASE_DIR / "plots"))
 LOG_FILE = os.getenv("LOG_FILE", str(BASE_DIR / "logs" / "logger.log"))
 RESULTS_ANALYSIS_FILE = os.getenv("RESULTS_ANALYSIS_FILE", str(BASE_DIR / "outputs" / "analysis.txt"))
 RESULTS_MODELS_FILE = os.getenv("RESULTS_MODELS_FILE", str(BASE_DIR / "outputs" / "models_MAE_metric.json"))
-
 
 # SQL files
 SQL_DIR = BASE_DIR / "sql"

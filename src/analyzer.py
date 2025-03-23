@@ -1,5 +1,5 @@
 import os
-from src.settings import SQL_ANALYSIS_FILE, DAYS_AFTER_DROP, RESULTS_ANALYSIS_FILE
+from src.settings import SQL_ANALYSIS_FILE, DAYS_AFTER_DROP, RESULTS_ANALYSIS_FILE, OUTPUTS
 from src.logger import setup_logger
 from src.database_manager import DatabaseManager
 from typing import List
@@ -38,6 +38,7 @@ def write_results_to_file(text: str) -> None:
         None
     """
     try:
+        os.makedirs(OUTPUTS, exist_ok=True)
         with open(RESULTS_ANALYSIS_FILE, "a", encoding="utf-8") as file:
             file.write(text + "\n")
     except Exception as e:
