@@ -10,7 +10,7 @@
     {
         "coin_id": "cardano",
         "model_type": "linear",
-        "MAE": 0.11764104984200152,
+        "MAE": 0.11764104984200155,
         "prediction_date": "2025-03-24",
         "predicted_price": 0.7564195927314115,
         "currency": "USD"
@@ -18,7 +18,7 @@
     {
         "coin_id": "ethereum",
         "model_type": "linear",
-        "MAE": 109.98718439818094,
+        "MAE": 109.98718439818099,
         "prediction_date": "2025-03-24",
         "predicted_price": 1874.9362702305712,
         "currency": "USD"

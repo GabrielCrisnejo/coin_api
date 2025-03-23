@@ -1,13 +1,8 @@
 import os
 from pathlib import Path
-from dotenv import load_dotenv
 
 # Define base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Load environment variables from .env file
-ENV_PATH = BASE_DIR / ".env"
-load_dotenv(dotenv_path=ENV_PATH)
 
 # Directories
 DATA = os.getenv("DATA", str(BASE_DIR / "data"))

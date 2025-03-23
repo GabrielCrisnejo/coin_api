@@ -1,6 +1,5 @@
 import logging
 import os
-import warnings
 from src.settings import LOG_FILE
 
 def setup_logger(name: str, log_file: str = LOG_FILE, level: int = logging.INFO, to_file: bool = True) -> logging.Logger:

@@ -1,4 +1,4 @@
-## Installation and Setup
+# Installation and Setup
 
 This setup uses Python 3.12.2. Follow these steps:
 ## 1. Create the Conda Environment
@@ -15,12 +15,20 @@ Install all required dependencies from `requirements.txt`
 $ pip install -r requirements.txt
 ```
 ## 4. Set Up PostgreSQL with Docker
+Verify that port `5432` is not being used by another service:
+```
+$ sudo lsof -i :5432
+```
+If PostgreSQL is running natively on your system (outside of Docker), you can temporarily stop it with:
 
-Uuse `docker-compose.yml` to download the PostgreSQL image and run the container:
+```
+$ sudo systemctl stop postgresql
+```
+Use `docker-compose.yml` to download the PostgreSQL image and run the container:
 ```
 $ docker-compose up -d
 ```
-## Running
+# Running
 To run the python CLI app, use the following command with your desired coin ID and date range:
 ```
 $ python main.py --coin-id <coin-id> --start-date <YYYY-MM-DD> --end-date <YYYY-MM-DD> --store
@@ -31,12 +39,12 @@ where:
 - `--store` is an optional argument that indicates whether the downloaded data should be stored in the PostgreSQL database. If this argument is not provided, the data will only be saved locally in the `data` directory.
 - Additionally, the date range specified by ``--start-date`` and `--end-date` can be replaced by a specific date using the `--date` argument (eg. `python main.py --date 2025-03-01 --coin-id bitcoin`).
 - In case no argument is specified, the script will only download Bitcoin data for the previous day locally.
-### Example:
+## Example:
 To fetch data for Bitcoin, Ethereum and Cardano from January 1st to March 20th, 2025, use:
 ```
 $ python main.py --start-date 2025-01-01 --end-date 2025-03-20 --coin-id bitcoin,ethereum,cardano --store
 ```
-### Output:
+## Output:
 
 - The data will be downloaded in **JSON** format in the `data` folder and stored in the PostgreSQL database.
 - A log file will be created in the `logs` folder.
@@ -46,11 +54,11 @@ $ python main.py --start-date 2025-01-01 --end-date 2025-03-20 --coin-id bitcoin
 - Plots showing price trends for each currency will be saved in the `plots` folder.
 - A `model_results.json` file in the `outputs` folder will contain the MAE (Mean Absolute Error) metric and the predicted price for the next day for both the linear regression model and the XGBoost model for each coin.
 
-## 2. Configure periodic download with CRON
+# 1. Configure periodic download with CRON
 
 To configure periodic download with CRON, run the following command:
 ```
-$ python src/setup_cron.py
+$ python setup_cron.py
 ```
 By default, the script will download data from Bitcoin, Ethereum, and Cardano every day at 3 a.m. But it can be configured in `settings.py`
 
