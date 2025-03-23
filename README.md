@@ -30,7 +30,7 @@ where:
 - `<YYYY-MM-DD>` is the date in the format `Year-Month-Day` (e.g., `2025-01-01`).
 - `--store` is an optional argument that indicates whether the downloaded data should be stored in the PostgreSQL database. If this argument is not provided, the data will only be saved locally in the `data` directory.
 - Additionally, the date range specified by ``--start-date`` and `--end-date` can be replaced by a specific date using the `--date` argument (eg. `python main.py --date 2025-03-01 --coin-id bitcoin`).
-- "In case no argument is specified, the script will only download Bitcoin data for the previous day locally.
+- In case no argument is specified, the script will only download Bitcoin data for the previous day locally.
 ### Example:
 To fetch data for Bitcoin, Ethereum and Cardano from January 1st to March 20th, 2025, use:
 ```
