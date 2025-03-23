@@ -1,9 +1,6 @@
-# Installation and Setup
+## Installation and Setup
 
-We will use Python 3.12.2 for this setup. 
-
-First, prepare the Conda environment:
-
+This setup uses Python 3.12.2. Follow these steps:
 ## 1. Create the Conda Environment
 ```
 $ conda create --name my_env python=3.12.2 -y
@@ -12,45 +9,42 @@ $ conda create --name my_env python=3.12.2 -y
 ```
 $ conda activate my_env
 ```
-## 3. Install Dependencies from `requirements.txt`
+## 3. Install Dependencies
+Install all required dependencies from `requirements.txt`
 ```
 $ pip install -r requirements.txt
 ```
-Finally, download the PostgreSQL image and run the container:
-## 4. Download the PostgreSQL 17.4 Docker Image
+## 4. Set Up PostgreSQL with Docker
 
-To download the latest PostgreSQL 17.4 image from Docker Hub, run the following command:
-```
-$ docker pull postgres:17.4
-```
-## 5. Running PostgreSQL with Docker Compose
-
-We use `docker-compose.yml` to set up a PostgreSQL container:
+Uuse `docker-compose.yml` to download the PostgreSQL image and run the container:
 ```
 $ docker-compose up -d
 ```
-# Task 1: Getting crypto token data
-
-## 1. Download of a particular currency on a specific day
-
-To run the script, use the following command with your desired coin ID and date:
+## Running
+To run the python CLI app, use the following command with your desired coin ID and date range:
 ```
-$ python src/fetcher.py --coin-id <coin-id> --date <YYYY-MM-DD>
+$ python main.py --coin-id <coin-id> --start-date <YYYY-MM-DD> --end-date <YYYY-MM-DD> --store
 ```
 where:
 - `<coin-id>` is the identifier for the cryptocurrency (e.g., `bitcoin`, `ethereum`).
 - `<YYYY-MM-DD>` is the date in the format `Year-Month-Day` (e.g., `2025-01-01`).
-
+- `--store` is an optional argument that indicates whether the downloaded data should be stored in the PostgreSQL database. If this argument is not provided, the data will only be saved locally in the `data` directory.
+- Additionally, the date range specified by ``--start-date`` and `--end-date` can be replaced by a specific date using the `--date` argument (eg. `python main.py --date 2025-03-01 --coin-id bitcoin`).
+- "In case no argument is specified, the script will only download Bitcoin data for the previous day locally.
 ### Example:
-
-To fetch data for Bitcoin on January 1st, 2025, use:
+To fetch data for Bitcoin, Ethereum and Cardano from January 1st to March 20th, 2025, use:
 ```
-$ python src/fetcher.py --coin-id bitcoin --date 2025-01-01
+$ python main.py --start-date 2025-01-01 --end-date 2025-03-20 --coin-id bitcoin,ethereum,cardano --store
 ```
-
 ### Output:
 
-- The data will be downloaded in **JSON format** and stored in: `data/downloads/single/`
+- The data will be downloaded in **JSON** format in the `data` folder and stored in the PostgreSQL database.
+- A log file will be created in the `logs` folder.
+- A `analysis.txt` file will be created in the `outputs` folder with the following information:
+    - Average price per coin and month (in USD)
+    - Average price recovery after 3 days of consecutive price drops within an `n`-days window (in USD) (default `n=2`)
+- Plots showing price trends for each currency will be saved in the `plots` folder.
+- A `models_MAE_metric.json` file in the `outputs` folder will contain the MAE (Mean Absolute Error) metric and the predicted price for the next day for both the linear regression model and the XGBoost model for each coin.
 
 ## 2. Configure periodic download with CRON
 
@@ -73,120 +67,28 @@ and remove all of them with:
 ```
 $ crontab -r
 ```
+## Implemented Features
+### Task 1:
+1.  The CLI application receives a date and a coin identifier, then downloads the data from the API. The data is stored locally in a JSON file in `data` folder.
+2.  A log file is generated for each run, and the app can be configured to download data every day. By default,  Bitcoin, Ethereum, and Cardano data will be download daily at 3 AM. This can be set up from th `settings.py` file.
+3.  The application supports downloading and processing data for a date range. The progress is monitored in the log file.
 
-## 3. Bulk-processing for a time range
+Note: The process runs concurrently with a configurable limit set in the `settings.py` file.
+### Task 2:
+1.  Two tables were created with the required specifications, and the corresponding SQL queries were written in `.sql` files (see `01_create_raw_data_table.sql` and `02_create_aggregated_data_table.sql` in the `sql` folder). Additionally, the `volume_usd` field was added to the database since it will be used for training machine learning models in **Task 4**.
 
-To fetch historical data for a range of dates for specific coins, you can run the script with the --start-date and --end-date arguments. You can also specify the coins you want to fetch data for using the --coin-id argument (optional).
+Note: Database manager follows Singleton Pattern.
 
-### Example: Fetch data for multiple coins (bitcoin, ethereum) from March 1st, 2025 to March 3rd, 2025
-```
-$ python src/fetcher.py --start-date 2025-03-01 --end-date 2025-03-03 --coin-id bitcoin,ethereum
-```
+2.  The application includes an optional `--store` argument that allows storing data in the PostgreSQL database. It also updates the monthly maximum and minimum values for each coin. This can be verified by checking the database and observing how these values change when new data is added.
 
-### Example: Fetch data for the default coins (bitcoin, ethereum, cardano) from March 1st, 2025 to March 3rd, 2025
-```
-$ python src/fetcher.py --start-date 2025-03-01 --end-date 2025-03-03
-```
+Note: `SQLAlchemy` was used following best practices for database management in Python.
+### Task 3:
+1.  The average values per coin per month were calculated (see the `output` folder).
+2.  The price increase was calculated after a three-day consecutive drop within a two-day window, which is configurable in settings.py. The market cap was also included.
 
-### Example: Fetch data for a single coin (bitcoin) from March 1st, 2025 to March 3rd, 2025
-```
-$ python src/fetcher.py --start-date 2025-03-01 --end-date 2025-03-03 --coin-id bitcoin
-```
-
-### Default behavior
-
-If no arguments are provided, the script will fetch data for today's date (`today`) for the default coins (`bitcoin, ethereum, cardano`).
-```
-$ python src/fetcher.py
-```
-### Output:
-
-- The data will be downloaded in **JSON format** and stored in: `data/downloads/bulk/`
-
-### Bonus
-
-The bulk processing is running in a concurrent way using the `concurrent` library..
-
-# Task 2: Loading data into the database
-
-## 1. and 2. 
-
-In order to create the two tables specified in the challenge run the following code:
-```
-$ python src/loader.py
-```
-Note 1: Note that in this case, only the specified tables and their columns have been created. However, they are empty.
-
-If you want to create the tables with their columns and actually load them with data, we have to add the `--store` argument:
-```
-$ python src/loader.py --store
-```
-Note 2: By default, the database is loaded with information from the files in the `data/testing` folder. This can be modified from `settings.py`.
-
-Note 3: Although it was not a requirement, we have added `volume_usd` to the `raw_crypto_data` table since we will use it to train the model in Task 4.
-
-Note 4: The maximum and minimum values ​​for each currency per month are automatically updated when we load new data. This can be verified as follows:
-
-### Example
-
-First, enter the container:
-```
-$ docker exec -it postgres_db psql -U gcrisnejo -d crypto_db
-```
-Second, display the maximum and minimum values:
-```
-crypto_db=# SELECT coin_id, year, month, max_price, min_price FROM aggregated_crypto_data;
-```
-Output: 
-```
-coin_id  | year | month |     max_price      |     min_price      
-----------+------+-------+--------------------+--------------------
- ethereum | 2025 |     2 |  3296.390634843652 | 2603.0333698049267
- cardano  | 2025 |     1 |  1.084480992215901 | 0.8442610184323533
- ethereum | 2025 |     1 | 3447.0340476747956 | 3076.4937692857234
- bitcoin  | 2025 |     1 | 104835.19253555956 |  92376.27578346101
- bitcoin  | 2025 |     2 |  97836.18856127483 |  83900.11496524839
- cardano  | 2025 |     2 | 0.8102560488773543 | 0.6446208040699569
-(6 rows)
-```
-Third, copy the files in `data/added_files`to `data/testing`
-```
-$ cp data/added_files/* data/testing/
-```
-
-Fourth load them into the database:
-```
-$ python src/loader.py --store
-```
-Finally, display again the maximum and minimum values in the database and compare:
-```
-crypto_db=# SELECT coin_id, year, month, max_price, min_price FROM aggregated_crypto_data;
-```
-Output: 
-```
-coin_id  | year | month |     max_price      |     min_price      
-----------+------+-------+--------------------+--------------------
- ethereum | 2025 |     2 |  3296.390634843652 | 2305.3229378029837
- ethereum | 2025 |     1 | 3687.1447140588307 | 3076.4937692857234
- cardano  | 2025 |     1 | 1.1369537229272808 | 0.8442610184323533
- bitcoin  | 2025 |     1 |  106182.2368201815 |  92376.27578346101
- bitcoin  | 2025 |     2 | 102382.39409722165 |  83900.11496524839
- cardano  | 2025 |     2 | 0.9425307818897108 | 0.6446208040699569
-(6 rows)
-```
-You can check that the maximum and minimum were updated.
-
-Note 5: No previous records are lost, only updated if needed. This means that if there is already a record for the same `coin_id` and `date`, the new data will not be inserted.
-
-# Task 3: Analysing coin data with SQL
-
-Run the following command:
-```
-$ python src/analyzer.py
-```
-
-# Task 4: Finance meets Data Science
-Run the following command:
-```
-$ python src/builder.py
-```
+Note: The results will be shown in a `.txt` file (see `analysis.txt` at `outputs` folder). The queries were written in an `.sql` file (see `analysis_queries.sql` at `sql` folder).
+### Task 4:
+1.  The graphs displaying the prices of Bitcoin, Ethereum, and Cardano for the last 30 days can be found in the `saved_30days_plots` folder.
+2.  The requested features have been added.
+3.  The data has been reprocessed as requested, including holidays from China and the US.
+4.  Two models were trained: Linear Regression and XGBoost, both aimed at predicting the price for the next day (T1).

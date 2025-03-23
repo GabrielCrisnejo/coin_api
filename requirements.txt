@@ -1,6 +1,5 @@
 holidays==0.69
 xgboost==3.0.0
-tqdm==4.66.5
 requests==2.28.1
 sqlalchemy==2.0.34
 psycopg2-binary==2.9.10

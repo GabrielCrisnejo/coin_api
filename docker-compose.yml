@@ -6,26 +6,8 @@ services:
     container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: crypto_db
+      POSTGRES_USER: gcrisnejo
+      POSTGRES_PASSWORD: gcrisnejo
     ports:
-      - "${DB_PORT}:${DB_PORT}"
-
-  app:
-    build:
-      context: .
-    container_name: crypto_app
-    depends_on:
-      - db
-    environment:
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_PORT=${DB_PORT}
-      - DB_HOST=${DB_HOST}
-    volumes:
-      - ./data:/app/data
-      - ./plots:/app/plots
-      - ./logs:/app/logs
-    command: python main.py --start-date 2025-03-17 --end-date 2025-03-19 --coin-id bitcoin,ethereum,cardano --store
+      - "5432:5432"

@@ -1,0 +1,50 @@
+[
+    {
+        "coin_id": "bitcoin",
+        "model_type": "linear",
+        "MAE": 5195.7062104699025,
+        "prediction_date": "2025-03-24",
+        "predicted_price": 82557.62565821847,
+        "currency": "USD"
+    },
+    {
+        "coin_id": "cardano",
+        "model_type": "linear",
+        "MAE": 0.11764104984200152,
+        "prediction_date": "2025-03-24",
+        "predicted_price": 0.7564195927314115,
+        "currency": "USD"
+    },
+    {
+        "coin_id": "ethereum",
+        "model_type": "linear",
+        "MAE": 109.98718439818094,
+        "prediction_date": "2025-03-24",
+        "predicted_price": 1874.9362702305712,
+        "currency": "USD"
+    },
+    {
+        "coin_id": "bitcoin",
+        "model_type": "xgboost",
+        "MAE": 5163.416275520032,
+        "prediction_date": "2025-03-24",
+        "predicted_price": 84064.2734375,
+        "currency": "USD"
+    },
+    {
+        "coin_id": "cardano",
+        "model_type": "xgboost",
+        "MAE": 0.11116021607267201,
+        "prediction_date": "2025-03-24",
+        "predicted_price": 0.8095024824142456,
+        "currency": "USD"
+    },
+    {
+        "coin_id": "ethereum",
+        "model_type": "xgboost",
+        "MAE": 159.97477315859933,
+        "prediction_date": "2025-03-24",
+        "predicted_price": 2030.4403076171875,
+        "currency": "USD"
+    }
+]

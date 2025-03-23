@@ -1,47 +1,93 @@
 import os
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-from src.settings import * # Asegúrate de tener tu archivo settings.py configurado
-from src.logger import * # Asegúrate de tener tu archivo logger.py configurado
+from src.settings import SQL_ANALYSIS_FILE, DAYS_AFTER_DROP, RESULTS_ANALYSIS_FILE
+from src.logger import setup_logger
+from src.database_manager import DatabaseManager
+from typing import List
 
-# Configuración del logger
+# Logger configuration
 logger = setup_logger("query_executor")
 
-# Configuración de la conexión a la base de datos
-engine = create_engine(DB_URL, echo=False, pool_pre_ping=True)
-Session = sessionmaker(bind=engine)
+def load_queries_from_file(file_path: str) -> List[str]:
+    """Loads SQL queries from a file.
 
-class DatabaseManager:
-    def __enter__(self):
-        self.session = Session()
-        logger.info("Connected to the database successfully.")
-        return self
+    Args:
+        file_path (str): Path to the SQL file to load.
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.session.close()
-        logger.info("Database connection closed.")
-
-    def execute_query(self, query):
-        """Ejecuta una consulta SQL y devuelve los resultados."""
-        try:
-            result = self.session.execute(text(query))
-            return result.fetchall()
-        except Exception as e:
-            logger.error(f"Error executing query: {e}")
-            return None
-
-def load_queries_from_file(file_path):
-    """Carga las consultas SQL desde un archivo."""
+    Returns:
+        List[str]: A list of SQL queries as strings.
+    """
     if not os.path.exists(file_path):
         logger.error(f"SQL file {file_path} not found.")
         return []
+    
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            queries = [query.strip() for query in file.read().split(";") if query.strip()]
+        return queries
+    except Exception as e:
+        logger.error(f"Error reading SQL file {file_path}: {e}")
+        return []
 
-    with open(file_path, "r") as file:
-        queries = [query.strip() for query in file.read().split(";") if query.strip()]
-    return queries
+def write_results_to_file(text: str) -> None:
+    """Writes results to a text file.
 
-def run_sql_queries():
-    """Ejecuta las consultas SQL de análisis, permitiendo parámetros dinámicos."""
+    Args:
+        text (str): The text content to write to the file.
+    
+    Returns:
+        None
+    """
+    try:
+        with open(RESULTS_ANALYSIS_FILE, "a", encoding="utf-8") as file:
+            file.write(text + "\n")
+    except Exception as e:
+        logger.error(f"Error writing to results file: {e}")
+
+def get_formatted_query(query: str) -> str:
+    """Helper function to format SQL queries dynamically.
+
+    Args:
+        query (str): The SQL query to format.
+    
+    Returns:
+        str: The formatted SQL query with dynamic parameters.
+    """
+    return query.format(DAYS_AFTER_DROP=DAYS_AFTER_DROP)
+
+def write_query_results_to_file(idx: int, results: List, result_type: str) -> None:
+    """Helper function to write query results to a file in the desired format.
+
+    Args:
+        idx (int): The index of the query being executed.
+        results (List): The results of the executed query.
+        result_type (str): Type or description of the results.
+
+    Returns:
+        None
+    """
+    if idx == 1:
+        result_text = f"✅ Average price per coin and month (in USD)"
+        write_results_to_file(result_text)  # Save to file
+        for coin, year, month, avg_price in results:
+            result_line = f"  - Coin: {coin} | Year: {int(year)} | Month: {int(month)} | Average: ${float(avg_price):.2f} USD"
+            write_results_to_file(result_line)  # Save to file
+
+    elif idx == 2:
+        result_text = f"✅ Average Price recovery after 3 days of consecutive drops on {DAYS_AFTER_DROP} days windows (in USD)"
+        write_results_to_file(result_text)  # Save to file
+        for coin, avg_price_increase, market_cap_usd in results:
+            result_line = f"  - Coin: {coin} | Avg Price Increase: ${avg_price_increase:.2f} | Market Cap: ${market_cap_usd:.2f}"
+            write_results_to_file(result_line)  # Save to file
+
+def run_sql_queries() -> None:
+    """Executes SQL analysis queries with dynamic parameters.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
     queries = load_queries_from_file(SQL_ANALYSIS_FILE)
 
     if not queries:
@@ -50,28 +96,17 @@ def run_sql_queries():
 
     with DatabaseManager() as db_manager:
         for idx, query in enumerate(queries, start=1):
-            # Reemplazar el marcador con el valor real desde settings.py
-            formatted_query = query.format(DAYS_AFTER_DROP=DAYS_AFTER_DROP)
-
+            formatted_query = get_formatted_query(query)
             logger.info(f"Executing query {idx}: {formatted_query[:50]}...")
-            results = db_manager.execute_query(formatted_query)
-
+            
+            try:
+                results = db_manager.execute_query(formatted_query)
+            except Exception as e:
+                logger.error(f"Error executing query {idx}: {e}")
+                continue
+            
             if not results:
                 logger.warning(f"No results for query {idx}.")
                 continue
 
-            # Improved result formatting
-            if idx == 1:
-                logger.info("Average price per coin and month (in USD):")
-                for coin, year, month, avg_price in results:
-                    logger.info(f"  - coin: {coin} | year: {int(year)} | month: {int(month)} | average: ${float(avg_price):.2f} USD")
-
-            elif idx == 2:
-                logger.info(f"Average Price recovery after consecutive drops of {DAYS_AFTER_DROP} days (in USD):")
-                for coin, avg_price_increase, market_cap_usd in results:
-                    logger.info(
-                        f"Coin: {coin} | Avg Price Increase: ${avg_price_increase:.2f} | Market Cap: ${market_cap_usd:.2f}"
-                    )
-
-if __name__ == "__main__":
-    run_sql_queries()
+            write_query_results_to_file(idx, results, formatted_query)

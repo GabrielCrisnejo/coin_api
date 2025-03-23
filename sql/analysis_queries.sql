@@ -1,4 +1,4 @@
--- 1. Obtener el promedio de precio por cada moneda y mes
+-- 1. Get the average price for each coin and month
 SELECT 
     coin_id, 
     EXTRACT(YEAR FROM date) AS year, 
@@ -8,7 +8,7 @@ FROM raw_crypto_data
 GROUP BY coin_id, year, month
 ORDER BY coin_id, year, month;
 
--- 2. Calcular el aumento promedio de precio después de caídas consecutivas de más de 3 días
+-- 2. Calculate the average price increase after consecutive drops of more than 3 days
 WITH price_changes AS (
     SELECT
         coin_id,
@@ -62,15 +62,15 @@ recovery_prices AS (
         q.coin_id,
         q.drop_end_date,
         
-        -- Precio al final de la caída (fecha exacta del drop_end_date)
+        -- Price at the end of the drop (exact date of the drop_end_date)
         ed.price_usd AS end_of_drop_price,
 
-        -- Primer precio de recuperación (primer precio 3 días después de la caída, ajusta el intervalo si quieres)
+        -- First recovery price (first price 3 days after the drop, adjust the interval if necessary)
         rp.price_usd AS recovery_price
 
     FROM qualified_drops q
 
-    -- Precio al final de la caída (fecha exacta del drop_end_date)
+    -- Price at the end of the drop (exact date of the drop_end_date)
     LEFT JOIN LATERAL (
         SELECT price_usd
         FROM raw_crypto_data r
@@ -80,7 +80,7 @@ recovery_prices AS (
         LIMIT 1
     ) ed ON TRUE
 
-    -- Precio de recuperación: primer precio >= drop_end_date + 3 días
+    -- Recovery price: first price >= drop_end_date + 3 days
     LEFT JOIN LATERAL (
         SELECT price_usd
         FROM raw_crypto_data r
