@@ -44,7 +44,7 @@ $ python main.py --start-date 2025-01-01 --end-date 2025-03-20 --coin-id bitcoin
     - Average price per coin and month (in USD)
     - Average price recovery after 3 days of consecutive price drops within an `n`-days window (in USD) (default `n=2`)
 - Plots showing price trends for each currency will be saved in the `plots` folder.
-- A `models_MAE_metric.json` file in the `outputs` folder will contain the MAE (Mean Absolute Error) metric and the predicted price for the next day for both the linear regression model and the XGBoost model for each coin.
+- A `model_results.json` file in the `outputs` folder will contain the MAE (Mean Absolute Error) metric and the predicted price for the next day for both the linear regression model and the XGBoost model for each coin.
 
 ## 2. Configure periodic download with CRON
 
